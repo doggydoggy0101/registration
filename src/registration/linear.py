@@ -12,9 +12,9 @@ class LinearRelaxationSolver:
 
         Arguments
 
-        - `pcd1`        - Source point cloud.
-        - `pcd2`        - Target point cloud.
-        - `noise_bound` - Noise bound (sigma) of the residual.
+        - `pcd1`         - Source point cloud.
+        - `pcd2`         - Target point cloud.
+        - `noise_bound`  - Noise bound (sigma) of the residual.
 
         Returns
 

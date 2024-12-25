@@ -117,14 +117,14 @@ class GncSolver:
         return mat
 
     def check_mu_convergence(self, mu, robust_type):
-        # Check if surrogate function approximates the original robust function.
-        # For TLS there is no stopping criteria on mu (it tend to infinity).
+        # Check if surrogate function approximates the original robust function (for GM).
         muConverge = False
         if robust_type == "GM" and abs(mu - 1.0) < 1e-9:
             muConverge = True
         return muConverge
 
     def check_weight_convergence(self, weight, robust_type):
+        # Check convergence of weights to binary values (for TLS).
         weightConverge = False
         if robust_type == "TLS":
             weightConverge = True

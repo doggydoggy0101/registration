@@ -3,9 +3,10 @@
 
 import numpy as np
 
-from src.gnc import GncSolver
-from src.linear import LinearRelaxationSolver
-from src.utils import project, registrationHorn, rot_and_t_to_vec, vec_to_rot_and_t
+from src.registration.gnc import GncSolver
+from src.registration.linear import LinearRelaxationSolver
+from src.registration.utils import rot_and_t_to_vec, vec_to_rot_and_t
+from src.utils import project, registrationHorn
 
 
 class AbstractSolver:
@@ -48,6 +49,8 @@ class AbstractSolver:
 
         Arguments
 
+        - `pcd1`        - Source point cloud.
+        - `pcd2`        - Target point cloud.
         - `rot`         - Rotation matrix.
         - `t`           - Translation vector.
         - `noise_bound` - Noise bound (sigma) of the residual.
