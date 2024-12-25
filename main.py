@@ -1,3 +1,6 @@
+# Copyright 2024 Bang-Shien Chen.
+# All rights reserved. See LICENSE for the license information.
+
 import numpy as np
 
 from src.solver import IrlsHornSolver, IrlsLinearSolver, GncHornSolver, GncLinearSolver

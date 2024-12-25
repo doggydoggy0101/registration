@@ -1,4 +1,8 @@
+# Copyright 2024 Bang-Shien Chen.
+# All rights reserved. See LICENSE for the license information.
+
 import numpy as np
+
 from src.gnc import GncSolver
 from src.linear import LinearRelaxationSolver
 from src.utils import project, registrationHorn, rot_and_t_to_vec, vec_to_rot_and_t
@@ -251,6 +255,7 @@ class GncLinearSolver(GncSolver, LinearRelaxationSolver, AbstractSolver):
                 self.check_cost_convergence(cost, prev_cost)
                 or self.check_mu_convergence(mu, self.robust_type)
                 # or self.check_weight_convergence(vec_w, self.robust_type)
+                # TODO: TLS weight converge for linear relaxation approach
             ):
                 break
             prev_cost = cost
