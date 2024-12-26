@@ -43,16 +43,21 @@ class LinearRelaxationSolver:
         Returns
 
         - `mat` - Weighted quadratic term.
+        - `vec` - Weight vector.
         """
         mat = np.zeros((10, 10))
+        vec = np.zeros(len(terms))
         if robust_type == "TLS":
-            for mat_i in terms:
+            for i, mat_i in enumerate(terms):
                 if x.T @ mat_i @ x <= c * c:
                     mat += mat_i
+                    vec[i] = 1
         if robust_type == "GM":
-            for mat_i in terms:
-                mat += mat_i / pow(x.T @ mat_i @ x + c * c, 2)
-        return mat
+            for i, mat_i in enumerate(terms):
+                w_i = 1 / pow(x.T @ mat_i @ x + c * c, 2)
+                mat += w_i * mat_i
+                vec[i] = w_i
+        return mat, vec
 
     def solve_quadratic_program(self, mat):
         """

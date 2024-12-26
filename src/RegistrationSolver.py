@@ -148,13 +148,13 @@ class IrlsLinearSolver(LinearRelaxationSolver, AbstractSolver):
 
         for _ in range(self.max_iter):
             # weight update
-            mat_w = self.compute_weighted_term(terms, x, self.c, self.robust_type)
+            mat_w, vec_w = self.compute_weighted_term(
+                terms, x, self.c, self.robust_type
+            )
 
-            # BUG: TLS with linear relaxation sometimes get zero matrix as the quadratic term.
-            # Might be because all the weights are 0, i.e., all outliers (extreme outlier case).
-            # TODO: Try weight convergence first!
-            if np.linalg.matrix_rank(mat_w) == 0:
-                # print("IRLS robust function:", self.robust_type)
+            # NOTE: In extreme outlier cases, TLS sometimes get zero matrix as the quadratic term.
+            # This is because all the weights are zero, i.e., all the data are outliers.
+            if sum(vec_w) == 0:
                 break
 
             # variable update
@@ -257,13 +257,13 @@ class GncLinearSolver(GncSolver, LinearRelaxationSolver, AbstractSolver):
 
         for _ in range(self.max_iter):
             # weight update
-            mat_w = self.compute_weighted_term(terms, x, self.c, self.robust_type, mu)
+            mat_w, vec_w = self.compute_weighted_term(
+                terms, x, self.c, self.robust_type, mu
+            )
 
-            # BUG: TLS with linear relaxation sometimes get zero matrix as the quadratic term.
-            # Might be because all the weights are 0, i.e., all outliers (extreme outlier case).
-            # TODO: Try weight convergence first!
-            if np.linalg.matrix_rank(mat_w) == 0:
-                # print("GNC robust function:", self.robust_type)
+            # NOTE: In extreme outlier cases, TLS sometimes get zero matrix as the quadratic term.
+            # This is because all the weights are zero, i.e., all the data are outliers.
+            if sum(vec_w) == 0:
                 break
 
             # variable update
@@ -273,8 +273,7 @@ class GncLinearSolver(GncSolver, LinearRelaxationSolver, AbstractSolver):
             if (
                 self.check_cost_convergence(cost, prev_cost)
                 or self.check_mu_convergence(mu, self.robust_type)
-                # or self.check_weight_convergence(vec_w, self.robust_type)
-                # TODO: TLS weight converge for linear relaxation approach
+                or self.check_weight_convergence(vec_w, self.robust_type)
             ):
                 break
             prev_cost = cost

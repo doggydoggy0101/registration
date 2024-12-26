@@ -103,18 +103,25 @@ class GncSolver:
         Returns
 
         - `mat` - Weighted quadratic term.
+        - `vec` - Weight vector.
         """
         mat = np.zeros((13, 13))
+        vec = np.zeros(len(terms))
         if robust_type == "TLS":
-            for mat_i in terms:
+            for i, mat_i in enumerate(terms):
                 if x.T @ mat_i @ x <= (mu / (mu + 1)) * c * c:
                     mat += mat_i
+                    vec[i] = 1
                 elif x.T @ mat_i @ x <= ((mu + 1) / mu) * c * c:
-                    mat += mat_i * (c * np.sqrt(mu * (mu + 1) / (x.T @ mat_i @ x)) - mu)
+                    w_i = c * np.sqrt(mu * (mu + 1) / (x.T @ mat_i @ x)) - mu
+                    mat += w_i * mat_i
+                    vec[i] = w_i
         if robust_type == "GM":
-            for mat_i in terms:
-                mat += mat_i * pow((mu * c * c) / (x @ mat_i @ x + mu * c * c), 2)
-        return mat
+            for i, mat_i in enumerate(terms):
+                w_i = pow((mu * c * c) / (x @ mat_i @ x + mu * c * c), 2)
+                mat += w_i * mat_i
+                vec[i] = w_i
+        return mat, vec
 
     def check_mu_convergence(self, mu, robust_type):
         # Check if surrogate function approximates the original robust function (for GM).
