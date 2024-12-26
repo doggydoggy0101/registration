@@ -147,6 +147,12 @@ class IrlsLinearSolver(LinearRelaxationSolver, AbstractSolver):
         for _ in range(self.max_iter):
             # weight update
             mat_w = self.compute_weighted_term(terms, x, self.c, self.robust_type)
+
+            # BUG: TLS with linear relaxation sometimes get zero matrix as the quadratic term.
+            # Might be because all the weights are 0, i.e., all outliers (extreme outlier case).
+            if np.linalg.matrix_rank(mat_w) == 0:
+                break
+
             # variable update
             x = self.solve_quadratic_program(mat_w)
             # stopping criteria
@@ -247,6 +253,12 @@ class GncLinearSolver(GncSolver, LinearRelaxationSolver, AbstractSolver):
         for _ in range(self.max_iter):
             # weight update
             mat_w = self.compute_weighted_term(terms, x, self.c, self.robust_type, mu)
+
+            # BUG: TLS with linear relaxation sometimes get zero matrix as the quadratic term.
+            # Might be because all the weights are 0, i.e., all outliers (extreme outlier case).
+            if np.linalg.matrix_rank(mat_w) == 0:
+                break
+
             # variable update
             x = self.solve_quadratic_program(mat_w)
             # stopping criteria

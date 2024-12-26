@@ -111,6 +111,9 @@ class GncSolver:
                     mat += mat_i
                 elif x.T @ mat_i @ x <= ((mu + 1) / mu) * c * c:
                     mat += mat_i * (c * np.sqrt(mu * (mu + 1) / (x.T @ mat_i @ x)) - mu)
+            if np.linalg.norm(mat) == 0:
+                print("all weights are zero")
+                print(mat[:4, :4])
         if robust_type == "GM":
             for mat_i in terms:
                 mat += mat_i * pow((mu * c * c) / (x @ mat_i @ x + mu * c * c), 2)
