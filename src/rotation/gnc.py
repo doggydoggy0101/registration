@@ -91,7 +91,7 @@ class GncSolver:
 
     def compute_weighted_term(self, terms, x, c, robust_type, mu):
         """
-        Compute a weighted quadratic term based on x and surrogate parameter.
+        Compute a weighted quadratic term based on x and surrogate parameter mu.
 
         Arguments
 

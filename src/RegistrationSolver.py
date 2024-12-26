@@ -152,8 +152,9 @@ class IrlsLinearSolver(LinearRelaxationSolver, AbstractSolver):
 
             # BUG: TLS with linear relaxation sometimes get zero matrix as the quadratic term.
             # Might be because all the weights are 0, i.e., all outliers (extreme outlier case).
+            # TODO: Try weight convergence first!
             if np.linalg.matrix_rank(mat_w) == 0:
-                # print("Quadratic term is nonsingular, IRLS robust function:", self.robust_type)
+                # print("IRLS robust function:", self.robust_type)
                 break
 
             # variable update
@@ -260,8 +261,9 @@ class GncLinearSolver(GncSolver, LinearRelaxationSolver, AbstractSolver):
 
             # BUG: TLS with linear relaxation sometimes get zero matrix as the quadratic term.
             # Might be because all the weights are 0, i.e., all outliers (extreme outlier case).
+            # TODO: Try weight convergence first!
             if np.linalg.matrix_rank(mat_w) == 0:
-                # print("Quadratic term is nonsingular, GNC robust function:", self.robust_type)
+                # print("GNC robust function:", self.robust_type)
                 break
 
             # variable update

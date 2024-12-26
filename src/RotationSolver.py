@@ -150,6 +150,7 @@ class IrlsLinearSolver(LinearRelaxationSolver, AbstractSolver):
 
             # BUG: TLS with linear relaxation sometimes get zero matrix as the quadratic term.
             # Might be because all the weights are 0, i.e., all outliers (extreme outlier case).
+            # TODO: Try weight convergence first!
             if np.linalg.matrix_rank(mat_w) == 0:
                 break
 
@@ -256,6 +257,7 @@ class GncLinearSolver(GncSolver, LinearRelaxationSolver, AbstractSolver):
 
             # BUG: TLS with linear relaxation sometimes get zero matrix as the quadratic term.
             # Might be because all the weights are 0, i.e., all outliers (extreme outlier case).
+            # TODO: Try weight convergence first!
             if np.linalg.matrix_rank(mat_w) == 0:
                 break
 

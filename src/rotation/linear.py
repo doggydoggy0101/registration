@@ -64,7 +64,7 @@ class LinearRelaxationSolver:
         This has a closed-form solution:
 
             x = (inv(mat) @ e) / (e.T @ inv(mat) @ e)
-        
+
         NOTE: This requires mat to be invertible/singular/full-rank.
         We use the pseudo-inverse if the matrix is non-singular.
 
@@ -85,6 +85,6 @@ class LinearRelaxationSolver:
             lu, piv = sp.linalg.lu_factor(mat)
             temp = sp.linalg.lu_solve((lu, piv), e)
         else:
-            mat_pseudo_inv = np.linalg.pinv(mat) 
+            mat_pseudo_inv = np.linalg.pinv(mat)
             temp = mat_pseudo_inv @ e
         return (1 / (e @ temp)) * temp
