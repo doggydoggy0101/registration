@@ -4,6 +4,7 @@
 import numpy as np
 
 from src.registration.gnc import GncSolver
+from src.registration.fracgm import FracgmSolver
 from src.registration.linear import LinearRelaxationSolver
 from src.registration.utils import rot_and_t_to_vec, vec_to_rot_and_t
 from src.utils import project, registrationHorn
@@ -279,6 +280,38 @@ class GncLinearSolver(GncSolver, LinearRelaxationSolver, AbstractSolver):
             prev_cost = cost
             # surrogate update
             mu = self.update_mu(mu, self.robust_type, self.gnc_factor)
+
+        rot, t = vec_to_rot_and_t(x)
+        rot = project(rot)
+
+        return rot, t
+
+
+class FracgmLinearSolver(FracgmSolver, LinearRelaxationSolver, AbstractSolver):
+    def __init__(self, max_iteration=1000, tolerance=1e-6, c=1):
+        super().__init__()
+        self.max_iter = max_iteration
+        self.tol = tolerance
+        self.c = c
+
+    def solve(self, pcd1, pcd2, noise_bound=0.1):
+        # initial guess by Horn's approach
+        rot, t = registrationHorn(pcd1, pcd2)
+
+        terms = self.compute_terms(pcd1, pcd2, noise_bound, self.c)
+        x = rot_and_t_to_vec(rot, t)
+
+        for _ in range(self.max_iter):
+            # auxiliary variables update
+            beta, mu = self.update_auxiliary_variables(terms)
+            mat_w = self.compute_weighted_term(terms, beta, mu)
+            # variable update
+            x = self.solve_quadratic_program(mat_w)
+            self.update_terms_cache(terms, x)
+            # stopping criteria
+            psi_norm = self.compute_psi_norm(terms, beta, mu)
+            if psi_norm < self.tol:
+                break
 
         rot, t = vec_to_rot_and_t(x)
         rot = project(rot)

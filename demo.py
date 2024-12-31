@@ -8,6 +8,7 @@ from src.RegistrationSolver import (
     IrlsLinearSolver,
     GncHornSolver,
     GncLinearSolver,
+    FracgmLinearSolver,
 )
 
 
@@ -33,49 +34,35 @@ def print_solution(rot, t):
 c = 1
 noise_bound = 0.1
 max_iteration = 1000
-rel_tol = 1e-6
+tolerance = 1e-6
 
 
 src_reg, dst_reg, gt_reg = get_toy_data()
 print("Ground truth:")
 print(gt_reg, end="\n\n")
 
-solver = IrlsHornSolver(max_iteration, rel_tol, c, robust_type="TLS")
-rot, t = solver.solve(src_reg, dst_reg, noise_bound)
-print("IRLS-TLS-Horn:")
-print_solution(rot, t)
 
-solver = IrlsHornSolver(max_iteration, rel_tol, c, robust_type="GM")
+solver = IrlsHornSolver(max_iteration, tolerance, c, robust_type="GM")
 rot, t = solver.solve(src_reg, dst_reg, noise_bound)
 print("IRLS-GM-Horn:")
 print_solution(rot, t)
 
-solver = IrlsLinearSolver(max_iteration, rel_tol, c, robust_type="TLS")
-rot, t = solver.solve(src_reg, dst_reg, noise_bound)
-print("IRLS-TLS-Linear:")
-print_solution(rot, t)
-
-solver = IrlsLinearSolver(max_iteration, rel_tol, c, robust_type="GM")
+solver = IrlsLinearSolver(max_iteration, tolerance, c, robust_type="GM")
 rot, t = solver.solve(src_reg, dst_reg, noise_bound)
 print("IRLS-GM-Linear:")
 print_solution(rot, t)
 
-solver = GncHornSolver(max_iteration, rel_tol, c, robust_type="TLS")
-rot, t = solver.solve(src_reg, dst_reg, noise_bound)
-print("GNC-TLS-Horn:")
-print_solution(rot, t)
-
-solver = GncHornSolver(max_iteration, rel_tol, c, robust_type="GM")
+solver = GncHornSolver(max_iteration, tolerance, c, robust_type="GM")
 rot, t = solver.solve(src_reg, dst_reg, noise_bound)
 print("GNC-GM-Horn:")
 print_solution(rot, t)
 
-solver = GncLinearSolver(max_iteration, rel_tol, c, robust_type="TLS")
-rot, t = solver.solve(src_reg, dst_reg, noise_bound)
-print("GNC-TLS-Linear:")
-print_solution(rot, t)
-
-solver = GncLinearSolver(max_iteration, rel_tol, c, robust_type="GM")
+solver = GncLinearSolver(max_iteration, tolerance, c, robust_type="GM")
 rot, t = solver.solve(src_reg, dst_reg, noise_bound)
 print("GNC-GM-Linear:")
+print_solution(rot, t)
+
+solver = FracgmLinearSolver(max_iteration, tolerance, c)
+rot, t = solver.solve(src_reg, dst_reg, noise_bound)
+print("FracGM-Linear:")
 print_solution(rot, t)
