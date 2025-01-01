@@ -6,6 +6,7 @@ import numpy as np
 from src.registration.solver import AbstractSolver
 from src.registration.linear import LinearRelaxationSolver
 from src.registration.sdp import SdpSolver
+from src.registration.rgd import RgdSolver
 from src.registration.gnc import GncSolver
 from src.registration.fracgm import FracgmSolver
 from src.registration.utils import rot_and_t_to_vec, vec_to_rot_and_t
@@ -120,6 +121,49 @@ class IrlsSdpSolver(SdpSolver, AbstractSolver):
 
             # variable update
             x = self.solve_semidefinite_program(mat_w, initial=x)
+            # stopping criteria
+            cost = x.T @ mat_w @ x
+            if self.check_cost_convergence(cost, prev_cost):
+                break
+            prev_cost = cost
+
+        rot, t = vec_to_rot_and_t(x)
+
+        return rot, t
+
+
+class IrlsRgdSolver(RgdSolver, AbstractSolver):
+    def __init__(self, max_iteration=1000, tolerance=1e-6, c=1, robust_type="GM"):
+        assert robust_type == "TLS" or "GM", "Robust type must be TLS/GM."
+
+        super().__init__()
+        self.max_iter = max_iteration
+        self.tol = tolerance
+        self.c = c
+        self.robust_type = robust_type
+
+    def solve(self, pcd1, pcd2, noise_bound=0.1):
+        # initial guess by Horn's approach
+        rot, t = registrationHorn(pcd1, pcd2)
+        res = self.compute_residuals(pcd1, pcd2, rot, t, noise_bound)
+        prev_cost = np.sum(res * res)
+        cost = 0.0
+
+        terms = self.compute_terms(pcd1, pcd2, noise_bound)
+        x = rot_and_t_to_vec(rot, t)
+
+        for _ in range(self.max_iter):
+            # weight update
+            mat_w, vec_w = self.compute_weighted_term(
+                terms, x, self.c, self.robust_type
+            )
+
+            # NOTE: TLS extreme outlier cases when all the data are outliers.
+            if sum(vec_w) == 0:
+                break
+
+            # variable update
+            x = self.solve_riemannian_gradient_descent(mat_w, x)
             # stopping criteria
             cost = x.T @ mat_w @ x
             if self.check_cost_convergence(cost, prev_cost):
@@ -305,7 +349,69 @@ class GncSdpSolver(GncSolver, SdpSolver, AbstractSolver):
         rot, t = vec_to_rot_and_t(x)
 
         return rot, t
-    
+
+
+class GncRgdSolver(GncSolver, RgdSolver, AbstractSolver):
+    def __init__(
+        self,
+        max_iteration=1000,
+        tolerance=1e-6,
+        c=1,
+        robust_type="GM",
+        gnc_factor=1.4,
+        weight_tolerace=1e-4,
+    ):
+        assert robust_type == "TLS" or "GM", "Robust type must be TLS/GM."
+
+        super().__init__()
+        self.max_iter = max_iteration
+        self.tol = tolerance
+        self.c = c
+        self.robust_type = robust_type
+        self.gnc_factor = gnc_factor
+        self.weight_tol = weight_tolerace
+
+    def solve(self, pcd1, pcd2, noise_bound=0.1):
+        # initial guess by Horn's approach
+        rot, t = registrationHorn(pcd1, pcd2)
+        res = self.compute_residuals(pcd1, pcd2, rot, t, noise_bound)
+        prev_cost = np.sum(res * res)
+        cost = 0.0
+
+        terms = self.compute_terms(pcd1, pcd2, noise_bound)
+        x = rot_and_t_to_vec(rot, t)
+
+        # initial surrogate parameter
+        mu = self.compute_initial_mu(res, self.c, self.robust_type)
+
+        for _ in range(self.max_iter):
+            # weight update
+            mat_w, vec_w = self.compute_weighted_term(
+                terms, x, self.c, self.robust_type, mu
+            )
+
+            # NOTE: TLS extreme outlier cases when all the data are outliers.
+            if sum(vec_w) == 0:
+                break
+
+            # variable update
+            x = self.solve_riemannian_gradient_descent(mat_w, x)
+            # stopping criteria
+            cost = x.T @ mat_w @ x
+            if (
+                self.check_cost_convergence(cost, prev_cost)
+                or self.check_mu_convergence(mu, self.robust_type)
+                or self.check_weight_convergence(vec_w, self.robust_type)
+            ):
+                break
+            prev_cost = cost
+            # surrogate update
+            mu = self.update_mu(mu, self.robust_type, self.gnc_factor)
+
+        rot, t = vec_to_rot_and_t(x)
+
+        return rot, t
+
 
 class FracgmLinearSolver(FracgmSolver, LinearRelaxationSolver, AbstractSolver):
     def __init__(self, max_iteration=1000, tolerance=1e-6, c=1):
@@ -358,7 +464,7 @@ class FracgmSdpSolver(FracgmSolver, SdpSolver, AbstractSolver):
             beta, mu = self.update_auxiliary_variables(terms)
             mat_w = self.compute_weighted_term(terms, beta, mu)
             # variable update
-            x = self.solve_semidefinite_program(mat_w, x)
+            x = self.solve_semidefinite_program(mat_w, initial=x)
             self.update_terms_cache(terms, x)
             # stopping criteria
             psi_norm = self.compute_psi_norm(terms, beta, mu)
@@ -368,4 +474,34 @@ class FracgmSdpSolver(FracgmSolver, SdpSolver, AbstractSolver):
         rot, t = vec_to_rot_and_t(x)
 
         return rot, t
-    
+
+
+class FracgmRgdSolver(FracgmSolver, RgdSolver, AbstractSolver):
+    def __init__(self, max_iteration=1000, tolerance=1e-6, c=1):
+        super().__init__()
+        self.max_iter = max_iteration
+        self.tol = tolerance
+        self.c = c
+
+    def solve(self, pcd1, pcd2, noise_bound=0.1):
+        # initial guess by Horn's approach
+        rot, t = registrationHorn(pcd1, pcd2)
+
+        terms = self.compute_terms(pcd1, pcd2, noise_bound, self.c)
+        x = rot_and_t_to_vec(rot, t)
+
+        for _ in range(self.max_iter):
+            # auxiliary variables update
+            beta, mu = self.update_auxiliary_variables(terms)
+            mat_w = self.compute_weighted_term(terms, beta, mu)
+            # variable update
+            x = self.solve_riemannian_gradient_descent(mat_w, x)
+            self.update_terms_cache(terms, x)
+            # stopping criteria
+            psi_norm = self.compute_psi_norm(terms, beta, mu)
+            if psi_norm < self.tol:
+                break
+
+        rot, t = vec_to_rot_and_t(x)
+
+        return rot, t
