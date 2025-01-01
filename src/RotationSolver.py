@@ -3,93 +3,11 @@
 
 import numpy as np
 
-from src.rotation.gnc import GncSolver
+from src.rotation.solver import AbstractSolver
 from src.rotation.linear import LinearRelaxationSolver
+from src.rotation.gnc import GncSolver
 from src.rotation.utils import rot_to_vec, vec_to_rot
 from src.utils import project, rotationSVD
-
-
-class AbstractSolver:
-    def __init__(self):
-        """
-        Robust rotation estimation solver.
-
-        Arguments
-
-        - `max_iter`    - Maximum number of iterations.
-        - `tol`         - Cost tolerance for early stop.
-        - `c`           - Threshold c in the robust function.
-        - `robust_type` - Robust function: Truncated Least Squares (TLS) or Geman-McClure (GM).
-        """
-        self.max_iter = 1000
-        self.tol = 1e-6
-        self.c = 1
-        self.robust_type = "GM"
-
-    def solve(self, pcd1, pcd2, noise_bound):
-        """
-        Solve the robust rotation estimation problem.
-
-        Arguments
-
-        - `pcd1`        - Source point cloud.
-        - `pcd2`        - Target point cloud.
-        - `noise_bound` - Noise bound (sigma) of the residual.
-
-        Returns
-        - `rot` - Rotation matrix.
-        """
-        rot = rotationSVD(pcd1, pcd2)
-        return rot
-
-    def compute_residuals(self, pcd1, pcd2, rot, noise_bound):
-        """
-        Compute a residual vector based on rotation, translation, and noise bound.
-
-        Arguments
-
-        - `pcd1`        - Source point cloud.
-        - `pcd2`        - Target point cloud.
-        - `rot`         - Rotation matrix.
-        - `noise_bound` - Noise bound (sigma) of the residual.
-
-        Returns
-
-        - Residual vector.
-        """
-        return np.linalg.norm(pcd2 - (rot @ pcd1.T).T, axis=1, ord=2) / noise_bound
-
-    def compute_weights(self, res, c, robust_type):
-        """
-        Compute a weight vector based on residuals.
-
-        Arguments
-
-        - `res`         - Residuals of the previous iteration.
-        - `c`           - Square of threshold c.
-        - `robust_type` - Robust function: Truncated Least Squares (TLS) or Geman-McClure (GM).
-
-        Returns
-
-        - `vec` - Weight vector.
-        """
-        n = len(res)
-        vec = np.zeros(n)
-        if robust_type == "TLS":
-            for i in range(n):
-                if res[i] * res[i] <= c * c:
-                    vec[i] = 1
-        if robust_type == "GM":
-            for i in range(n):
-                vec[i] = 1 / pow(res[i] * res[i] + c * c, 2)
-        return vec
-
-    # Check convergence of relative cost difference.
-    def check_cost_convergence(self, prev_cost, curr_cost):
-        costConverge = False
-        if abs(curr_cost - prev_cost) / max(prev_cost, 1e-7) < self.tol:
-            costConverge = True
-        return costConverge
 
 
 class IrlsSvdSolver(AbstractSolver):
