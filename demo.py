@@ -7,12 +7,15 @@ from src.RegistrationSolver import (
     IrlsLinearSolver,
     IrlsSdpSolver,
     IrlsRgdSolver,
+    IrlsSmrSolver,
     GncLinearSolver,
     GncSdpSolver,
     GncRgdSolver,
+    GncSmrSolver,
     FracgmLinearSolver,
     FracgmSdpSolver,
     FracgmRgdSolver,
+    FracgmSmrSolver,
 )
 
 
@@ -61,6 +64,11 @@ rot, t = solver.solve(src_reg, dst_reg, noise_bound)
 print("IRLS-GM-RGD:")
 print_solution(rot, t)
 
+solver = IrlsSmrSolver(max_iteration, tolerance, c, robust_type="GM")
+rot, t = solver.solve(src_reg, dst_reg, noise_bound)
+print("IRLS-GM-SMR:")
+print_solution(rot, t)
+
 solver = GncLinearSolver(max_iteration, tolerance, c, robust_type="GM")
 rot, t = solver.solve(src_reg, dst_reg, noise_bound)
 print("GNC-GM-Linear:")
@@ -76,6 +84,11 @@ rot, t = solver.solve(src_reg, dst_reg, noise_bound)
 print("GNC-GM-RGD:")
 print_solution(rot, t)
 
+solver = GncSmrSolver(max_iteration, tolerance, c, robust_type="GM")
+rot, t = solver.solve(src_reg, dst_reg, noise_bound)
+print("GNC-GM-SMR:")
+print_solution(rot, t)
+
 solver = FracgmLinearSolver(max_iteration, tolerance, c)
 rot, t = solver.solve(src_reg, dst_reg, noise_bound)
 print("FracGM-Linear:")
@@ -89,4 +102,9 @@ print_solution(rot, t)
 solver = FracgmRgdSolver(max_iteration, tolerance, c)
 rot, t = solver.solve(src_reg, dst_reg, noise_bound)
 print("FracGM-RGD:")
+print_solution(rot, t)
+
+solver = FracgmSmrSolver(max_iteration, tolerance, c)
+rot, t = solver.solve(src_reg, dst_reg, noise_bound)
+print("FracGM-SMR:")
 print_solution(rot, t)
