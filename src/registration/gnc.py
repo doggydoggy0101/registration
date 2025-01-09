@@ -99,6 +99,7 @@ class GncSolver:
         - `x`           - Vectorized solution of the previous iteration.
         - `c`           - Square of threshold c.
         - `robust_type` - Robust function: Truncated Least Squares (TLS) or Geman-McClure (GM).
+        - `mu`          - Surrogate parameter mu.
 
         Returns
 
@@ -122,6 +123,28 @@ class GncSolver:
                 mat += w_i * mat_i
                 vec[i] = w_i
         return mat, vec
+
+    def compute_weighted_fractional_term(self, terms, beta, mu, gnc_mu):
+        """
+        Compute a weighted quadratic term based on beta and mu (FracGM) and surrogate parameter gnc-mu.
+
+        Arguments
+
+        - `terms`  - List of structurized quadratic terms (FracGM).
+        - `beta`   - Auxiliary parameter beta (FracGM).
+        - `mu`     - Auxiliary parameter mu (FracGM).
+        - `gnc_mu` - Surrogate parameter gnc_mu.
+
+        Returns
+
+        - `mat` - Weighted quadratic term.
+        """
+        mat = np.zeros((13, 13))
+        for i in range(len(terms)):
+            mat += (
+                gnc_mu * mu[i] * terms[i].f_mat() - mu[i] * beta[i] * terms[i].h_mat()
+            )
+        return mat
 
     def check_mu_convergence(self, mu, robust_type):
         # Check if surrogate function approximates the original robust function (for GM).

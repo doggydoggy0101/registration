@@ -49,7 +49,7 @@ class Fractional:
 
 
 class FracgmSolver:
-    def compute_terms(self, pcd1, pcd2, noise_bound, c):
+    def compute_fractional_terms(self, pcd1, pcd2, noise_bound, c):
         """
         Compute structurized quadratic terms of each residual (FracGM) .
 
@@ -76,7 +76,7 @@ class FracgmSolver:
             )
         return terms
 
-    def compute_weighted_term(self, terms, beta, mu):
+    def compute_weighted_fractional_term(self, terms, beta, mu):
         """
         Compute a weighted quadratic term based on beta and mu (FracGM).
 
@@ -114,7 +114,7 @@ class FracgmSolver:
         return beta, mu
 
     # Update the cache of the structurized quadratic terms (FracGM).
-    def update_terms_cache(self, terms, vec):
+    def update_fractional_terms_cache(self, terms, vec):
         for term in terms:
             term.update_cache(vec)
 

@@ -4,6 +4,9 @@ __pycache__/
 # IDEs
 .vscode
 
+# environments
+.venv
+
 # ruff
 .ruff_cache
 
@@ -14,3 +17,7 @@ __pycache__/
 experiments/
 plot.py
 plot_rotation.py
+
+# test
+src_test/
+test.py
