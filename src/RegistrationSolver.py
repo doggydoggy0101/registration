@@ -685,12 +685,13 @@ class GncFracgmLinearSolver(
             self.update_fractional_terms_cache(terms, x)
             # stopping criteria
             psi_norm = self.compute_psi_norm(terms, beta, mu)
-            if psi_norm < self.tol and self.check_mu_convergence(
-                gnc_mu, robust_type="GM"
-            ):
+            if psi_norm < self.tol:
                 break
 
-            gnc_mu = self.update_mu(gnc_mu, robust_type="GM", gnc_factor=self.gnc_factor)
+            if not self.check_mu_convergence(gnc_mu, robust_type="GM"):
+                gnc_mu = self.update_mu(
+                    gnc_mu, robust_type="GM", gnc_factor=self.gnc_factor
+                )
 
         rot, t = vec_to_rot_and_t(x)
         rot = project(rot)
